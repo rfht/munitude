@@ -42,7 +42,11 @@ namespace Munitude
 
 	class MunitudeCore
 	{
-		public static string[] GameAssemblies = new string[]{ "Assembly-CSharp" };
+		public static string[] GameAssemblies = new string[]{
+			"Assembly-CSharp", 
+			"Assembly-CSharp-firstpass",
+			"Assembly-UnityScript-firstpass"
+		};
 
 		public static void Main(string[] args)
 		{
