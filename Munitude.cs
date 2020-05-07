@@ -1,5 +1,6 @@
 using System;
 using System.Reflection;
+using System.Runtime.Serialization;
 
 namespace Munitude
 {
@@ -44,19 +45,22 @@ namespace Munitude
 	{
 		public static string[] GameAssemblies = new string[]{
 			"Assembly-CSharp", 
-			"Assembly-CSharp-firstpass",
-			"Assembly-UnityScript-firstpass"
+			//"Assembly-CSharp-firstpass",
+			//"Assembly-UnityScript-firstpass"
 		};
 
 		public static void Main(string[] args)
 		{
+			Console.WriteLine("\nStarting Munitude...");
+
 			//Assembly assemCsharp = Assembly.Load("Assembly-CSharp");
 			//Console.WriteLine("\nList of assemblies loaded in current appdomain:");
 			//foreach (Assembly assemb in MunitudeReflections.AppDomainAssemblies())
-			foreach (string ga in GameAssemblies)
-			{
-				Assembly assemb = Assembly.Load(ga);
+			//foreach (string ga in GameAssemblies)
+			//{
+				//Assembly assemb = Assembly.Load(ga);
 				//Console.WriteLine(assemb.ToString());
+				/*
 				MunitudeReflections.PrintAssemInfo(assemb);
 				Console.WriteLine("\nAssembly Types:\n");
 				foreach (Type assemType in assemb.GetTypes())
@@ -74,11 +78,63 @@ namespace Munitude
 					foreach (MethodInfo m in assemType.GetMethods(BindingFlags.NonPublic | BindingFlags.Instance))
 						Console.Write(" {0}", m);
 					Console.WriteLine();
-				} // foreach
-				Console.WriteLine();
-			} // foreach
+				*/
+				//} // foreach
+				//Console.WriteLine();
+			//} // foreach
+
+			// GameObject class
+			Assembly ueng = Assembly.Load("UnityEngine");
+			//dynamic go = ueng.CreateInstance("GameObject");
+			var myType = ueng.GetType("UnityEngine.GameObject");
+			//dynamic objMyClass = Activator.CreateInstance(myType); // cant resolve internal call to "UnityEngine.GameObject::Internal_CreateGameObject"
+			//Type parameterType = objMyClass.GetType();
+			
+			//foreach (MethodInfo m in go.GetMethods())
+				//Console.WriteLine(m);
+			//Console.WriteLine("{0}", parameterType.ToString());
+			//myType.GetMethod("Internal_CreateGameObject").Invoke(null, null);
+			foreach (MethodInfo m in myType.GetMethods(BindingFlags.NonPublic | BindingFlags.Instance))
+				Console.WriteLine(m);
+			Environment.Exit(0);
 		
-			Console.WriteLine("\nStarting Munitude...");
+			// Awake
+			foreach (string ga in GameAssemblies)
+			{
+				Assembly assemb = Assembly.Load(ga);
+				foreach (Type assemType in assemb.GetTypes())
+				{
+					foreach (MethodInfo m in assemType.GetMethods(BindingFlags.NonPublic | BindingFlags.Instance))
+					{
+						if (m.ToString().Equals("Void Awake()"))
+						{
+							Console.WriteLine("Method {0} in Type {1} in Assembly {2}", m.ToString(), assemType.ToString(), ga);
+							Console.WriteLine("Creating instance of {0}", assemType);
+							//object instance = Activator.CreateInstance(assemType);
+							//object instance = FormatterServices.GetUninitializedObject(assemType);
+							//instance.GetMethod("Awake", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(null, null);
+							// TODO: recursive until returns "Object"
+							Console.WriteLine(assemType.BaseType.Name);
+							Console.WriteLine(assemType.BaseType.BaseType.Name);
+							Console.WriteLine(assemType.BaseType.BaseType.BaseType.Name);
+							Console.WriteLine(assemType.BaseType.BaseType.BaseType.BaseType.Name);
+							Console.WriteLine(assemType.BaseType.BaseType.BaseType.BaseType.BaseType.Name);
+							// instead of creating instance, use GameObject's AddComponent
+							//object instance = assemb.CreateInstance(assemType.ToString());
+							//object testType = go.AddComponent(assemType.ToString());
+							Console.WriteLine("{0} has been created.", assemType);
+							if (m != null)
+							{
+								/* if method with parameters, use:
+								 * method.Invoke(null, new object[] { par1, par2 });
+								 */
+								//m.Invoke(null, null);
+							} // if
+							
+						} // if
+					} // foreach GetMethods
+				} // foreach GetTypes
+			} // foreach GameAssemblies
 
 
 			//typeof(ExampleClass).GetMethod("Start", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(new ExampleClass(), null);
