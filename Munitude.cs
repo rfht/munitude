@@ -1,4 +1,14 @@
+/*
+ * Problem => Solution
+ *
+ *
+ * System.IO.FileNotFoundException: Could not load file or assembly 'System.Core, Version=2.0.5.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e' or one of its dependencies. => ln -sf /usr/local/lib/mono/4.8-api/System.Core.dll System.Core.dll
+ */
+
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
 
@@ -29,11 +39,47 @@ namespace Munitude
 				Console.WriteLine(resname);
 		} // PrintAssemInfo
 
-		// not needed, just use assem.GetTypes()
-		/*
-		public static Type[] AssemblyTypes(Assembly assem)
+		public static IEnumerable<Type> GetLoadableTypes(Assembly assembly)
 		{
-		} */ // AssemblyTypes
+			if (assembly == null) throw new ArgumentNullException(nameof(assembly));
+			try
+			{
+				return assembly.GetTypes();
+			}
+			catch (ReflectionTypeLoadException e)
+			{
+				Console.WriteLine("GetLoadableTypes: ReflectionTypeLoadException encountered");
+				return e.Types.Where(t => t != null);
+			}
+		}
+
+		public static IEnumerable<MethodInfo> GetLoadableMethods(Type type, BindingFlags bflags)
+		{
+			if (type == null) throw new ArgumentNullException(nameof(type));
+			try
+			{
+				return type.GetMethods(bflags);
+			}
+			catch (TypeLoadException e)
+			{
+				Console.WriteLine("GetLoadableMethods: TypeLoadException encountered");
+				return new List<MethodInfo>();
+			}
+		}
+
+		public static IEnumerable<ConstructorInfo> GetLoadableConstructors(Type type)
+		{
+			if (type == null) throw new ArgumentNullException(nameof(type));
+			try
+			{
+				return type.GetConstructors();
+			}
+			catch (TypeLoadException e)
+			{
+				Console.WriteLine("GetLoadableConstructors: TypeLoadException encountered");
+				return new List<ConstructorInfo>();
+			}
+		}
 
 		public MunitudeReflections()
 		{
@@ -45,6 +91,8 @@ namespace Munitude
 	{
 		public static string[] GameAssemblies = new string[]{
 			"Assembly-CSharp", 
+			"UnityEngine",
+			//"UnityEngine.CoreModule",
 			//"Assembly-CSharp-firstpass",
 			//"Assembly-UnityScript-firstpass"
 		};
@@ -53,35 +101,37 @@ namespace Munitude
 		{
 			Console.WriteLine("\nStarting Munitude...");
 
-			//Assembly assemCsharp = Assembly.Load("Assembly-CSharp");
-			//Console.WriteLine("\nList of assemblies loaded in current appdomain:");
+			Assembly assemCsharp = Assembly.Load("Assembly-CSharp");
+			Console.WriteLine("\nList of assemblies loaded in current appdomain:");
 			//foreach (Assembly assemb in MunitudeReflections.AppDomainAssemblies())
-			//foreach (string ga in GameAssemblies)
-			//{
-				//Assembly assemb = Assembly.Load(ga);
-				//Console.WriteLine(assemb.ToString());
-				/*
+			foreach (string ga in GameAssemblies)
+			{
+				Assembly assemb = Assembly.Load(ga);
+				Console.WriteLine(assemb.ToString());
 				MunitudeReflections.PrintAssemInfo(assemb);
 				Console.WriteLine("\nAssembly Types:\n");
-				foreach (Type assemType in assemb.GetTypes())
+				//foreach (Type assemType in assemb.GetTypes())
+				foreach (Type assemType in MunitudeReflections.GetLoadableTypes(assemb))
 				{
 					Console.WriteLine("Type Name: {0}", assemType.ToString());
 					Console.Write("Constructors:");
-					foreach (ConstructorInfo c in assemType.GetConstructors())
+					//foreach (ConstructorInfo c in assemType.GetConstructors())
+					foreach (ConstructorInfo c in MunitudeReflections.GetLoadableConstructors(assemType))
 						Console.Write(" {0}", c);
 					Console.WriteLine();
 					Console.Write("Public Methods (without inherited ones):");
-					foreach (MethodInfo m in assemType.GetMethods(BindingFlags.DeclaredOnly))
+					//foreach (MethodInfo m in assemType.GetMethods(BindingFlags.DeclaredOnly))
+					foreach (MethodInfo m in MunitudeReflections.GetLoadableMethods(assemType, BindingFlags.DeclaredOnly))
 						Console.Write(" {0}", m);
 					Console.WriteLine();
 					Console.Write("Non-public Methods:");
-					foreach (MethodInfo m in assemType.GetMethods(BindingFlags.NonPublic | BindingFlags.Instance))
+					//foreach (MethodInfo m in assemType.GetMethods(BindingFlags.NonPublic | BindingFlags.Instance))
+					foreach (MethodInfo m in MunitudeReflections.GetLoadableMethods(assemType, BindingFlags.NonPublic | BindingFlags.Instance))
 						Console.Write(" {0}", m);
-					Console.WriteLine();
-				*/
-				//} // foreach
-				//Console.WriteLine();
-			//} // foreach
+					Console.WriteLine("\n");
+				} // foreach
+				Console.WriteLine();
+			} // foreach
 
 			// GameObject class
 			Assembly ueng = Assembly.Load("UnityEngine");
@@ -96,6 +146,16 @@ namespace Munitude
 			//myType.GetMethod("Internal_CreateGameObject").Invoke(null, null);
 			foreach (MethodInfo m in myType.GetMethods(BindingFlags.NonPublic | BindingFlags.Instance))
 				Console.WriteLine(m);
+			//Environment.Exit(0);
+
+			// Start
+			//Type testtype = assemCsharp.GetType("IntroMovieClipPlayer");
+			//object testinst = Activator.CreateInstance(testtype);
+			//MethodInfo testmeth = testtype.GetMethod("Start", BindingFlags.NonPublic | BindingFlags.Instance);
+			//testmeth.Invoke(testinst, null);
+			//Type debugLogHandler = Assembly.Load("UnityEngine.CoreModule").GetType("DebugLogHandler", true, true);
+			//Console.WriteLine("DebugLogHandler: {0}", debugLogHandler);
+
 			Environment.Exit(0);
 		
 			// Awake
