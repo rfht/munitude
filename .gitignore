@@ -4,3 +4,5 @@ CVS
 *.pdb
 *.core
 *.o
+/0Harmony.xml
+/munitude

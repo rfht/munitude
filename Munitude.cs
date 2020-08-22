@@ -18,9 +18,12 @@ using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
 
+//using Pose;	// https://github.com/tonerdo/pose
+using HarmonyLib;	// 0Harmony.dll: https://github.com/pardeike/Harmony
+
 namespace Munitude
 {
-	class MunitudeReflections
+	class Reflections
 	{
 		public static Assembly[] AppDomainAssemblies()
 		{
@@ -87,11 +90,11 @@ namespace Munitude
 			}
 		}
 
-		public MunitudeReflections()
+		public Reflections()
 		{
-		} // MunitudeReflections.ctor
+		} // Reflections.ctor
 
-	} // MunitudeReflections
+	} // Reflections
 
 	class MunitudeCore
 	{
@@ -100,12 +103,28 @@ namespace Munitude
 			List<Assembly> munitudeAssemblies = new List<Assembly>();
 			List<Type> startTypes = new List<Type>();
 			List<Type> awakeTypes = new List<Type>();
+			string assemblyPattern = @"^\./(UnityEngine|Assembly\-).*dll$";
 
 			Console.WriteLine("\nStarting Munitude...");
 
+			var matches = Directory.GetFiles(".")
+				.Where(path => Regex.Match(path, assemblyPattern).Success);
+			foreach (string file in matches)
+				munitudeAssemblies.Add(Assembly.LoadFrom(file));
+
+			var harmony = new Harmony("com.munitude.Munitude");
+			//harmony.PatchAll(Assembly.GetExecutingAssembly());
+			// TODO: add null checks
+			var original = Assembly.Load("UnityEngine.CoreModule").GetType("UnityEngine.DebugLogHandler", true, false)
+				.GetMethod("Internal_Log");
+			Console.WriteLine(original);
+			Environment.Exit(0);
+			ReversePatcher revPatch = new ReversePatcher(harmony, original, new HarmonyMethod(Assembly.Load("UnityEngine.CoreModule").GetType("Patch").GetMethod("MyInternal_Log")));
+			revPatch.Patch();
+
 			// acs = Assembly-CSharp.dll
 			Assembly acs = Assembly.Load("Assembly-CSharp");
-			Assembly acsf = Assembly.Load("Assembly-CSharp-firstpass");
+			//Assembly acsf = Assembly.Load("Assembly-CSharp-firstpass");
 
 			Console.Write("\nModules:");
 			foreach (Module m in acs.GetModules())
@@ -148,4 +167,12 @@ namespace Munitude
 			Environment.Exit(0);
 		} // Main
 	} // MunitudeCore
+
+	public class Patch
+	{
+		private static void MyInternal_Log()
+		{
+			throw new NotImplementedException("It's a stub");
+		} // MyInternal_Log
+	} // Patch
 } // Munitude

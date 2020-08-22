@@ -7,10 +7,10 @@ TARGET ?=	munitude
 SRCS =		munitude.c
 
 .PHONY: all
-all: $(TARGET) Munitude.exe UnityEngine
+all: $(TARGET) Munitude.exe Engine
 
-Munitude.exe: Munitude.cs
-	csc -debug Munitude.cs
+Munitude.exe: Munitude.cs 0Harmony.dll
+	csc -debug -r:0Harmony.dll Munitude.cs
 
 $(TARGET): munitude.o
 	$(CC) $(LDFLAGS) -o $(TARGET) munitude.o
