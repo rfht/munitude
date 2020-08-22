@@ -1,6 +1,6 @@
-/CVS
-/*.exe
-/*.dll
-/*.pdb
-/*.core
-/*.o
+CVS
+*.exe
+*.dll
+*.pdb
+*.core
+*.o

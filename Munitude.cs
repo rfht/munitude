@@ -3,6 +3,10 @@
  *
  *
  * System.IO.FileNotFoundException: Could not load file or assembly 'System.Core, Version=2.0.5.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e' or one of its dependencies. => ln -sf /usr/local/lib/mono/4.8-api/System.Core.dll System.Core.dll
+ *
+ * Could not load file or assembly 'PlayMaker => copy PlayMaker.dll from Managed directory (e.g. Enter the Gungeon)
+ *
+ * Assembly-CSharp-firstpass.dll exists => move it into the directory from where to run it
  */
 
 using System;
@@ -93,6 +97,7 @@ namespace Munitude
 	{
 		public static void Main(string[] args)
 		{
+			List<Assembly> munitudeAssemblies = new List<Assembly>();
 			List<Type> startTypes = new List<Type>();
 			List<Type> awakeTypes = new List<Type>();
 
@@ -100,6 +105,7 @@ namespace Munitude
 
 			// acs = Assembly-CSharp.dll
 			Assembly acs = Assembly.Load("Assembly-CSharp");
+			Assembly acsf = Assembly.Load("Assembly-CSharp-firstpass");
 
 			Console.Write("\nModules:");
 			foreach (Module m in acs.GetModules())
@@ -114,6 +120,8 @@ namespace Munitude
 			// list methods
 			foreach (Type t in acsTypes) {
 				Console.Write("\nMethods in {0}:", t);
+				// ERROR in Enter the Gungeon: Methods in dfAnimatedVector3: TypeLoadException: Parent class failed to load, due to: Invalid generic instantiation type:dfAnimatedValue`1 member:(null)
+				// ERROR in Dex: Methods in DexGUIRaycaster: TypeLoadException: Cannot override a non virtual method in a base type
 				foreach (MethodInfo m in t.GetMethods(BindingFlags.Public |
 					BindingFlags.NonPublic | BindingFlags.Instance)) {
 					Console.Write(" {0}", m.Name);
