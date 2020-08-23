@@ -113,13 +113,22 @@ namespace Munitude
 				munitudeAssemblies.Add(Assembly.LoadFrom(file));
 
 			var harmony = new Harmony("com.munitude.Munitude");
-			//harmony.PatchAll(Assembly.GetExecutingAssembly());
-			// TODO: add null checks
-			var original = Assembly.Load("UnityEngine.CoreModule").GetType("UnityEngine.DebugLogHandler", true, false)
-				.GetMethod("Internal_Log");
-			Console.WriteLine(original);
-			Environment.Exit(0);
-			ReversePatcher revPatch = new ReversePatcher(harmony, original, new HarmonyMethod(Assembly.Load("UnityEngine.CoreModule").GetType("Patch").GetMethod("MyInternal_Log")));
+			Type[] typeArray = Assembly.Load("UnityEngine.CoreModule").GetTypes();
+			foreach (Type t in typeArray.Where(element => element.Name.Equals(@"DebugLogHandler")))
+				Console.WriteLine(t.Name);
+			Type dlhType = typeArray.Where(element => element.Name.Equals(@"DebugLogHandler")).First();
+			Console.WriteLine("dlhType: {0}", dlhType);
+			object testInstance = Activator.CreateInstance(typeArray.Where(element => element.Name.Equals(@"DebugLogHandler")).First());
+			Console.WriteLine("dlhType Properties:");
+			foreach (var prop in testInstance.GetType().GetProperties(BindingFlags.Public|BindingFlags.NonPublic))
+				Console.WriteLine("{0}={1}", prop.Name, prop.GetValue(testInstance, null));
+			Console.WriteLine("dlhType Methods:");
+			foreach (MethodInfo m in dlhType.GetMethods(BindingFlags.Public|BindingFlags.NonPublic|BindingFlags.Instance))
+				Console.WriteLine("Method: {0}", m);
+			MethodInfo original = dlhType.GetMethod("LogFormat");
+			Console.WriteLine("via GetMethod: {0}", dlhType.GetMethod("LogFormat"));
+			HarmonyMethod standin = new HarmonyMethod(typeof(Patch).GetMethod("MyLogFormat"));
+			ReversePatcher revPatch = new ReversePatcher(harmony, original, standin);
 			revPatch.Patch();
 
 			// acs = Assembly-CSharp.dll
@@ -170,7 +179,7 @@ namespace Munitude
 
 	public class Patch
 	{
-		private static void MyInternal_Log()
+		private static void MyLogFormat()
 		{
 			throw new NotImplementedException("It's a stub");
 		} // MyInternal_Log
