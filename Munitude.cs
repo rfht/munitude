@@ -15,6 +15,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.Emit;
 using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
 
@@ -98,6 +99,8 @@ namespace Munitude
 
 	class MunitudeCore
 	{
+		public static Type dlhType;
+
 		public static void Main(string[] args)
 		{
 			List<Assembly> munitudeAssemblies = new List<Assembly>();
@@ -116,7 +119,7 @@ namespace Munitude
 			Type[] typeArray = Assembly.Load("UnityEngine.CoreModule").GetTypes();
 			foreach (Type t in typeArray.Where(element => element.Name.Equals(@"DebugLogHandler")))
 				Console.WriteLine(t.Name);
-			Type dlhType = typeArray.Where(element => element.Name.Equals(@"DebugLogHandler")).First();
+			dlhType = typeArray.Where(element => element.Name.Equals(@"DebugLogHandler")).First();
 			Console.WriteLine("dlhType: {0}", dlhType);
 			object testInstance = Activator.CreateInstance(typeArray.Where(element => element.Name.Equals(@"DebugLogHandler")).First());
 			Console.WriteLine("dlhType Properties:");
@@ -125,11 +128,19 @@ namespace Munitude
 			Console.WriteLine("dlhType Methods:");
 			foreach (MethodInfo m in dlhType.GetMethods(BindingFlags.Public|BindingFlags.NonPublic|BindingFlags.Instance))
 				Console.WriteLine("Method: {0}", m);
-			MethodInfo original = dlhType.GetMethod("LogFormat");
-			Console.WriteLine("via GetMethod: {0}", dlhType.GetMethod("LogFormat"));
+			MethodInfo original = AccessTools.DeclaredMethod(dlhType, "LogFormat");
+			Console.WriteLine("via GetMethod: {0}", original);
 			HarmonyMethod standin = new HarmonyMethod(typeof(Patch).GetMethod("MyLogFormat"));
-			ReversePatcher revPatch = new ReversePatcher(harmony, original, standin);
-			revPatch.Patch();
+			Console.WriteLine(MethodBase.GetCurrentMethod());
+			Console.WriteLine(original.GetType().BaseType.BaseType);
+			//ReversePatcher revPatch = new ReversePatcher(harmony, original, standin);
+			//ReversePatcher revPatch = harmony.CreateReversePatcher(original, standin);
+			//revPatch.Patch();
+			harmony.PatchAll();
+			Console.WriteLine(standin.method);
+			Console.WriteLine(standin.methodName);
+			foreach (MethodBase m in Harmony.GetAllPatchedMethods())
+				Console.WriteLine("Patched Method: {0}", m);
 
 			// acs = Assembly-CSharp.dll
 			Assembly acs = Assembly.Load("Assembly-CSharp");
@@ -177,11 +188,21 @@ namespace Munitude
 		} // Main
 	} // MunitudeCore
 
+	[Harmony]
 	public class Patch
 	{
-		private static void MyLogFormat()
+                static MethodBase TargetMethod() => AccessTools.DeclaredMethod(MunitudeCore.dlhType, "LogFormat");
+
+                static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instr) =>
+                        new[]
+                        {
+                                new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Patch), nameof(MyLogFormat))),
+                                new CodeInstruction(OpCodes.Ret)
+                        };
+
+		public static void MyLogFormat()
 		{
-			throw new NotImplementedException("It's a stub");
-		} // MyInternal_Log
+			Console.WriteLine("STUB: LogFormat");
+		} // MyLogFormat
 	} // Patch
 } // Munitude
