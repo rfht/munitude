@@ -19,7 +19,6 @@ using System.Reflection.Emit;
 using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
 
-//using Pose;	// https://github.com/tonerdo/pose
 using HarmonyLib;	// 0Harmony.dll: https://github.com/pardeike/Harmony
 
 namespace Munitude
@@ -97,48 +96,44 @@ namespace Munitude
 
 	} // Reflections
 
-	class MunitudeCore
+	public static class MunitudeCore
 	{
 		public static Type dlhType;
+		public static string[] typesToPatch = {
+			"UnityEngine.DebugLogHandler"
+		};
+
+		//public static bool ApplyPatch()
 
 		public static void Main(string[] args)
 		{
-			List<Assembly> munitudeAssemblies = new List<Assembly>();
+			List<Assembly>	munitudeAssemblies	= new List<Assembly>();
+			Dictionary<Type, Assembly> munitudeTypes= new Dictionary<Type, Assembly>();
 			List<Type> startTypes = new List<Type>();
 			List<Type> awakeTypes = new List<Type>();
 			string assemblyPattern = @"^\./(UnityEngine|Assembly\-).*dll$";
 
 			Console.WriteLine("\nStarting Munitude...");
 
+			// get all relevant assemblies
 			var matches = Directory.GetFiles(".")
 				.Where(path => Regex.Match(path, assemblyPattern).Success);
 			foreach (string file in matches)
 				munitudeAssemblies.Add(Assembly.LoadFrom(file));
 
-			var harmony = new Harmony("com.munitude.Munitude");
-			Type[] typeArray = Assembly.Load("UnityEngine.CoreModule").GetTypes();
-			foreach (Type t in typeArray.Where(element => element.Name.Equals(@"DebugLogHandler")))
-				Console.WriteLine(t.Name);
-			dlhType = typeArray.Where(element => element.Name.Equals(@"DebugLogHandler")).First();
-			Console.WriteLine("dlhType: {0}", dlhType);
-			object testInstance = Activator.CreateInstance(typeArray.Where(element => element.Name.Equals(@"DebugLogHandler")).First());
-			Console.WriteLine("dlhType Properties:");
-			foreach (var prop in testInstance.GetType().GetProperties(BindingFlags.Public|BindingFlags.NonPublic))
-				Console.WriteLine("{0}={1}", prop.Name, prop.GetValue(testInstance, null));
-			Console.WriteLine("dlhType Methods:");
-			foreach (MethodInfo m in dlhType.GetMethods(BindingFlags.Public|BindingFlags.NonPublic|BindingFlags.Instance))
-				Console.WriteLine("Method: {0}", m);
+			// get types from the assemblies
+			foreach (Assembly a in munitudeAssemblies.ToArray()) {
+				foreach (Type t in AccessTools.GetTypesFromAssembly(a)) {
+					munitudeTypes.Add(t, a);
+				}
+			}
+
+			// apply patches
+			var harmony = new Harmony("com.munitude.Munitude");	// initialize Harmony instance
+			dlhType = munitudeTypes.Where(kvp => kvp.Key.FullName.Equals("UnityEngine.DebugLogHandler")).First().Key;
 			MethodInfo original = AccessTools.DeclaredMethod(dlhType, "LogFormat");
-			Console.WriteLine("via GetMethod: {0}", original);
 			HarmonyMethod standin = new HarmonyMethod(typeof(Patch).GetMethod("MyLogFormat"));
-			Console.WriteLine(MethodBase.GetCurrentMethod());
-			Console.WriteLine(original.GetType().BaseType.BaseType);
-			//ReversePatcher revPatch = new ReversePatcher(harmony, original, standin);
-			//ReversePatcher revPatch = harmony.CreateReversePatcher(original, standin);
-			//revPatch.Patch();
 			harmony.PatchAll();
-			Console.WriteLine(standin.method);
-			Console.WriteLine(standin.methodName);
 			foreach (MethodBase m in Harmony.GetAllPatchedMethods())
 				Console.WriteLine("Patched Method: {0}", m);
 
