@@ -4,13 +4,15 @@
 #include <mono/metadata/assembly.h>
 #include <mono/metadata/mono-config.h>
 
-int test() { return 0; };
+/*
+ * needs to be called with Munitude.exe as the first argument
+ */
 
-struct UnityEngine_GameObject0 {
-	void *Internal_CreateGameObject;
-};
-
-//int GameObject_Internal_CreateGameObject() { return 0; }
+int int_0()
+{
+	printf("STUB: int_0\n");
+	return 0;
+}
 
 int main(int argc, char* argv[])
 {
@@ -18,15 +20,12 @@ int main(int argc, char* argv[])
 	MonoAssembly *assembly;
 
 	int retval;
-
-	struct UnityEngine_GameObject0 GameObject;
-	GameObject.Internal_CreateGameObject = test;
-
 	mono_config_parse(NULL);
 
 	domain = mono_jit_init("MunitudeDomain");
 	if (!domain)
 		exit(-1);
+	mono_add_internal_call ("UnityEngine.SystemInfo::SupportsRenderTextureFormat", int_0);
 	assembly = mono_domain_assembly_open (domain, "Munitude.exe");
 	if (!assembly)
 		exit(-1);

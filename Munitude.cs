@@ -109,8 +109,9 @@ namespace Munitude
 		{
 			List<Assembly>	munitudeAssemblies	= new List<Assembly>();
 			Dictionary<Type, Assembly> munitudeTypes= new Dictionary<Type, Assembly>();
-			List<Type> startTypes = new List<Type>();
-			List<Type> awakeTypes = new List<Type>();
+			List<Type>	initTypes	= new List<Type>();	// all types with Initialize() method
+			List<Type>	startTypes	= new List<Type>();
+			List<Type>	awakeTypes	= new List<Type>();
 			string assemblyPattern = @"^\./(UnityEngine|Assembly\-).*dll$";
 
 			Console.WriteLine("\nStarting Munitude...");
@@ -134,44 +135,53 @@ namespace Munitude
 			MethodInfo original = AccessTools.DeclaredMethod(dlhType, "LogFormat");
 			HarmonyMethod standin = new HarmonyMethod(typeof(Patch).GetMethod("MyLogFormat"));
 			harmony.PatchAll();
-			foreach (MethodBase m in Harmony.GetAllPatchedMethods())
-				Console.WriteLine("Patched Method: {0}", m);
-
-			// acs = Assembly-CSharp.dll
-			Assembly acs = Assembly.Load("Assembly-CSharp");
-			//Assembly acsf = Assembly.Load("Assembly-CSharp-firstpass");
-
-			Console.Write("\nModules:");
-			foreach (Module m in acs.GetModules())
-				Console.Write(" {0}", m);
-
-			// list types
-			Console.Write("\nTypes:");
-			Type[] acsTypes = acs.GetTypes();
-			foreach (Type t in acsTypes)
-				Console.Write(" {0}", t.Name);
 
 			// list methods
-			foreach (Type t in acsTypes) {
+			foreach (Type t in munitudeTypes.Keys) {
 				Console.Write("\nMethods in {0}:", t);
 				// ERROR in Enter the Gungeon: Methods in dfAnimatedVector3: TypeLoadException: Parent class failed to load, due to: Invalid generic instantiation type:dfAnimatedValue`1 member:(null)
 				// ERROR in Dex: Methods in DexGUIRaycaster: TypeLoadException: Cannot override a non virtual method in a base type
 				foreach (MethodInfo m in t.GetMethods(BindingFlags.Public |
 					BindingFlags.NonPublic | BindingFlags.Instance)) {
 					Console.Write(" {0}", m.Name);
+					// TODO: should this rather be m.FullName???
 					if (m.Name.Equals(@"Start"))
 						startTypes.Add(t);
 					else if (m.Name.Equals(@"Awake"))
 						awakeTypes.Add(t);
+					else if (m.Name.Equals(@"Initialize"))
+						initTypes.Add(t);
 				}
 			}
 			Console.WriteLine("\n");
 
-			if (startTypes.Count > 0)
-				Console.WriteLine("Start() method found in: {0}", startTypes.ToArray());
-			if (awakeTypes.Count > 0)
-				Console.WriteLine("Awake() method found in: {0}", awakeTypes.ToArray());
-			Console.WriteLine();
+			if (initTypes.Count > 0) {
+				Console.Write("Initialize() method found in:");
+				foreach (Type t in initTypes.ToArray())
+					Console.Write(" {0}", t.FullName);
+				Console.WriteLine();
+			}
+			if (startTypes.Count > 0) {
+				Console.Write("Start() method found in:");
+				foreach (Type t in startTypes.ToArray())
+					Console.Write(" {0}", t.FullName);
+				Console.WriteLine();
+			}
+			if (awakeTypes.Count > 0) {
+				Console.Write("Awake() method found in:");
+				foreach (Type t in awakeTypes.ToArray())
+					Console.Write(" {0}", t.FullName);
+				Console.WriteLine();
+			}
+
+			// run Initialize()
+			/*
+			foreach (Type t in initTypes)
+				t.GetMethod("Initialize", BindingFlags.Public |
+					BindingFlags.NonPublic |
+					BindingFlags.Instance)
+					.Invoke(Activator.CreateInstance(t), null);
+			*/
 
 			// run Start()
 			foreach (Type t in startTypes)
@@ -179,7 +189,6 @@ namespace Munitude
 					BindingFlags.NonPublic |
 					BindingFlags.Instance)
 					.Invoke(Activator.CreateInstance(t), null);
-			Environment.Exit(0);
 		} // Main
 	} // MunitudeCore
 

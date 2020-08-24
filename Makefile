@@ -28,4 +28,4 @@ Engine:
 .PHONY: clean
 clean:
 	$(RM) $(TARGET) munitude.o Munitude.exe
-	$(MAKE) -C Engine
+	$(MAKE) -C Engine clean
