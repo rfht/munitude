@@ -1,18 +1,8 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <mono/jit/jit.h>
-#include <mono/metadata/assembly.h>
-#include <mono/metadata/mono-config.h>
+#include "munitude.h"
 
 /*
  * needs to be called with Munitude.exe as the first argument
  */
-
-int int_0()
-{
-	printf("STUB: int_0\n");
-	return 0;
-}
 
 int main(int argc, char* argv[])
 {
@@ -25,7 +15,7 @@ int main(int argc, char* argv[])
 	domain = mono_jit_init("MunitudeDomain");
 	if (!domain)
 		exit(-1);
-	mono_add_internal_call ("UnityEngine.SystemInfo::SupportsRenderTextureFormat", int_0);
+	retval = init_internal_calls();
 	assembly = mono_domain_assembly_open (domain, "Munitude.exe");
 	if (!assembly)
 		exit(-1);
