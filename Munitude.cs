@@ -98,10 +98,10 @@ namespace Munitude
 
 	public static class MunitudeCore
 	{
-		public static Type dlhType;
-		public static string[] typesToPatch = {
-			"UnityEngine.DebugLogHandler"
-		};
+		//public static Type dlhType;
+		//public static string[] typesToPatch = {
+			//"UnityEngine.DebugLogHandler"
+		//};
 
 		//public static bool ApplyPatch()
 
@@ -130,11 +130,11 @@ namespace Munitude
 			}
 
 			// apply patches
-			var harmony = new Harmony("com.munitude.Munitude");	// initialize Harmony instance
-			dlhType = munitudeTypes.Where(kvp => kvp.Key.FullName.Equals("UnityEngine.DebugLogHandler")).First().Key;
-			MethodInfo original = AccessTools.DeclaredMethod(dlhType, "LogFormat");
-			HarmonyMethod standin = new HarmonyMethod(typeof(Patch).GetMethod("MyLogFormat"));
-			harmony.PatchAll();
+			//var harmony = new Harmony("com.munitude.Munitude");	// initialize Harmony instance
+			//dlhType = munitudeTypes.Where(kvp => kvp.Key.FullName.Equals("UnityEngine.DebugLogHandler")).First().Key;
+			//MethodInfo original = AccessTools.DeclaredMethod(dlhType, "LogFormat");
+			//HarmonyMethod standin = new HarmonyMethod(typeof(Patch).GetMethod("MyLogFormat"));
+			//harmony.PatchAll();
 
 			// list methods
 			foreach (Type t in munitudeTypes.Keys) {
@@ -192,6 +192,7 @@ namespace Munitude
 		} // Main
 	} // MunitudeCore
 
+/*
 	[Harmony]
 	public class Patch
 	{
@@ -209,4 +210,5 @@ namespace Munitude
 			Console.WriteLine("STUB: LogFormat");
 		} // MyLogFormat
 	} // Patch
+*/
 } // Munitude
