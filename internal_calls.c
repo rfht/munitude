@@ -29,7 +29,14 @@ int init_internal_calls() {
 	mono_add_internal_call ("UnityEngine.Camera::get_depthTextureMode", get_depthtexturemode);
 	mono_add_internal_call ("UnityEngine.Camera::set_depthTextureMode", int_0);
 
+	mono_add_internal_call ("UnityEngine.Component::GetComponentFastPath", ptr_null);
+
+	mono_add_internal_call ("UnityEngine.Debug::Internal_Log", void_func);
+
 	mono_add_internal_call ("UnityEngine.DebugLogHandler::Internal_Log", void_func);
+
+	mono_add_internal_call ("UnityEngine.GameObject::FindGameObjectWithTag", ptr_null);
+	mono_add_internal_call ("UnityEngine.GameObject::get_activeSelf", int_0);
 
 	mono_add_internal_call ("UnityEngine.Material::Internal_CreateWithShader", int_0);
 	mono_add_internal_call ("UnityEngine.Material::get_shader", ptr_null);
@@ -38,6 +45,8 @@ int init_internal_calls() {
 
 	mono_add_internal_call ("UnityEngine.Object::ToString", string_empty);
 	mono_add_internal_call ("UnityEngine.Object::set_hideFlags", int_0);
+
+	mono_add_internal_call ("UnityEngine.Rigidbody::set_freezeRotation", int_0);
 
 	mono_add_internal_call ("UnityEngine.Shader::get_isSupported", int_1);
 
