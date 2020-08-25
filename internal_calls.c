@@ -24,12 +24,15 @@ int get_depthtexturemode() {
 void void_func() { }
 
 int init_internal_calls() {
+	mono_add_internal_call ("UnityEngine.Application::get_isPlaying", int_0);
 	mono_add_internal_call ("UnityEngine.Behaviour::set_enabled", int_0);
 
 	mono_add_internal_call ("UnityEngine.Camera::get_depthTextureMode", get_depthtexturemode);
 	mono_add_internal_call ("UnityEngine.Camera::set_depthTextureMode", int_0);
 
 	mono_add_internal_call ("UnityEngine.Component::GetComponentFastPath", ptr_null);
+	mono_add_internal_call ("UnityEngine.Component::get_gameObject", ptr_null);
+	mono_add_internal_call ("UnityEngine.Component::get_transform", ptr_null);
 
 	mono_add_internal_call ("UnityEngine.Debug::Internal_Log", void_func);
 
@@ -43,7 +46,10 @@ int init_internal_calls() {
 
 	mono_add_internal_call ("UnityEngine.MonoBehaviour::.ctor", void_func);
 
+	mono_add_internal_call ("UnityEngine.Object::Destroy", void_func);
+	mono_add_internal_call ("UnityEngine.Object::DontDestroyOnLoad", void_func);
 	mono_add_internal_call ("UnityEngine.Object::ToString", string_empty);
+	mono_add_internal_call ("UnityEngine.Object::get_name", string_empty);
 	mono_add_internal_call ("UnityEngine.Object::set_hideFlags", int_0);
 
 	mono_add_internal_call ("UnityEngine.Rigidbody::set_freezeRotation", int_0);
@@ -55,5 +61,10 @@ int init_internal_calls() {
 	mono_add_internal_call ("UnityEngine.SystemInfo::get_supportsComputeShaders", int_1);
 	mono_add_internal_call ("UnityEngine.SystemInfo::get_supportsRenderTextures", int_1);
 	mono_add_internal_call ("UnityEngine.SystemInfo::get_supportsImageEffects", int_1);	// true if supports post-processing
+
+	mono_add_internal_call ("UnityEngine.Transform::INTERNAL_get_localPosition", ptr_null);	// TODO: use struct (Vector3)
+	mono_add_internal_call ("UnityEngine.Transform::INTERNAL_get_localRotation", ptr_null);	// TODO: use struct (Quaternion)
+	mono_add_internal_call ("UnityEngine.Transform::INTERNAL_get_position", ptr_null);	// TODO: use struct (Vector3)
+
 	return 0;
 }

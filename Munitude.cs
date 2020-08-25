@@ -9,6 +9,13 @@
  * Assembly-CSharp-firstpass.dll exists => move it into the directory from where to run it
  */
 
+/*
+ * To clarify
+ *
+ * Order of events?
+ * Awake before Start? (https://forum.unity.com/threads/load-order-of-assets.78691/)
+ */
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -182,6 +189,13 @@ namespace Munitude
 					BindingFlags.Instance)
 					.Invoke(Activator.CreateInstance(t), null);
 			*/
+
+			// run Awake()
+			foreach (Type t in awakeTypes)
+				t.GetMethod("Awake", BindingFlags.Public |
+					BindingFlags.NonPublic |
+					BindingFlags.Instance)
+					.Invoke(Activator.CreateInstance(t), null);
 
 			// run Start()
 			foreach (Type t in startTypes)
